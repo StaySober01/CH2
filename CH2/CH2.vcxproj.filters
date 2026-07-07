@@ -20,6 +20,7 @@
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Monster.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="Player.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="Thief.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="Warrior.cpp"><Filter>소스 파일</Filter></ClCompile>
@@ -27,6 +28,7 @@
   <ItemGroup>
     <ClInclude Include="Archer.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Magician.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="Monster.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="player.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>

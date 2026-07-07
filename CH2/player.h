@@ -21,6 +21,7 @@ public:
     const std::string& getJob() const;
     int getLevel() const;
     int getHp() const;
+    int getHP() const;
     int getMp() const;
     int getPower() const;
     int getDefence() const;
@@ -28,6 +29,7 @@ public:
     void setJob(const std::string& value);
     void setLevel(int value);
     void setHp(int value);
+    void setHP(int value);
     void setMp(int value);
     void setPower(int value);
     void setDefence(int value);

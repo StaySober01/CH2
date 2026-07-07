@@ -9,6 +9,7 @@ const std::string& Player::getName() const { return name; }
 const std::string& Player::getJob() const { return job; }
 int Player::getLevel() const { return level; }
 int Player::getHp() const { return hp; }
+int Player::getHP() const { return hp; }
 int Player::getMp() const { return mp; }
 int Player::getPower() const { return power; }
 int Player::getDefence() const { return defence; }
@@ -16,6 +17,7 @@ void Player::setName(const std::string& value) { name = value; }
 void Player::setJob(const std::string& value) { job = value; }
 void Player::setLevel(int value) { level = value; }
 void Player::setHp(int value) { hp = value; }
+void Player::setHP(int value) { hp = value; }
 void Player::setMp(int value) { mp = value; }
 void Player::setPower(int value) { power = value; }
 void Player::setDefence(int value) { defence = value; }

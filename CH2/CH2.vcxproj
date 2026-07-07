@@ -73,6 +73,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -85,6 +86,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -101,6 +103,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -113,6 +116,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -130,6 +134,7 @@
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="Magician.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Monster.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Thief.cpp" />
     <ClCompile Include="Warrior.cpp" />
@@ -137,6 +142,7 @@
   <ItemGroup>
     <ClInclude Include="Archer.h" />
     <ClInclude Include="Magician.h" />
+    <ClInclude Include="Monster.h" />
     <ClInclude Include="player.h" />
     <ClInclude Include="Thief.h" />
     <ClInclude Include="Warrior.h" />
