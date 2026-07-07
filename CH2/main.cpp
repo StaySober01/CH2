@@ -1,8 +1,11 @@
 #include <array>
+#include <cstdlib>
 #include <iostream>
 #include <limits>
 #include <string>
+#include <vector>
 #include "Archer.h"
+#include "Item.h"
 #include "Magician.h"
 #include "Monster.h"
 #include "Thief.h"
@@ -13,7 +16,17 @@ int calculateDamage(int power, int defence) {
     return damage > 0 ? damage : 1;
 }
 
-void battle(Player* player, Monster& monster) {
+constexpr std::size_t MAX_INVENTORY_SIZE = 10;
+
+void clearScreen() {
+    std::system("cls");
+}
+
+void pauseScreen() {
+    std::system("pause");
+}
+
+void battle(Player* player, Monster& monster, std::vector<Item>& inventory) {
     std::cout << "\n[ Battle Start! ] " << player->getName() << '(' << player->getJob()
               << ") vs " << monster.getName() << "\n";
 
@@ -44,12 +57,36 @@ void battle(Player* player, Monster& monster) {
     }
 
     if (monster.getHP() <= 0) {
+        Item droppedItem{ monster.getDropItemName(), monster.getDropItemPrice() };
         std::cout << "\n[==Victory!==]\n"
-                  << "  -> Got: " << monster.getDropItemName() << "!\n"
-                  << "  (Will be saved to inventory in the next STEP)\n";
+                  << "  -> Got: " << droppedItem.name << "!\n";
+
+        if (inventory.size() < MAX_INVENTORY_SIZE) {
+            inventory.push_back(droppedItem);
+            std::cout << "  -> Saved to inventory.\n";
+        }
+        else {
+            std::cout << "  -> Inventory is full.\n";
+        }
     }
     else {
         std::cout << "\nDefeat... " << player->getName() << " has fallen.\n";
+    }
+}
+
+void printInventory(const std::vector<Item>& inventory) {
+    std::cout << "\n[ Inventory (" << inventory.size() << '/'
+              << MAX_INVENTORY_SIZE << ") ]\n";
+
+    if (inventory.empty()) {
+        std::cout << "Inventory is empty.\n";
+        return;
+    }
+
+    int itemNumber = 1;
+    for (const Item& item : inventory) {
+        std::cout << itemNumber++ << ". ";
+        item.PrintInfo();
     }
 }
 
@@ -74,6 +111,7 @@ int main() {
         if (power < 20 || defence < 20) std::cout << "Power or Defence is too low. Try again.\n";
     } while (power < 20 || defence < 20);
 
+    clearScreen();
     int jobChoice = 0;
     while (true) {
         std::cout << "\n< Job Selection >\n"
@@ -88,6 +126,8 @@ int main() {
         std::cout << "Invalid input. Enter a number from 1 to 4.\n";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        pauseScreen();
+        clearScreen();
     }
 
     Player* player = nullptr;
@@ -108,34 +148,91 @@ int main() {
     player->printPlayerStatus();
     player->gainHpPotion(5);
     player->gainMpPotion(5);
-    std::cout << "* You received 5 HP Potions and 5 MP Potions.\n"
-              << "============================================\n"
-              << "< Character Upgrade >\n"
-              << "1. HP UP    2. MP UP    3. Power x2\n"
-              << "4. Defence x2  5. Show Status  0. Start Game\n"
-              << "============================================\n";
+    std::cout << "* You received 5 HP Potions and 5 MP Potions.\n";
+    pauseScreen();
 
     bool isGameStart = false;
     while (!isGameStart) {
-        int choice;
-        std::cout << "Choose: ";
-        std::cin >> choice;
-        if (choice < 0 || choice > 5) {
+        clearScreen();
+        std::cout << "============================================\n"
+                  << "< Character Upgrade >\n"
+                  << "1. HP UP    2. MP UP    3. Power x2\n"
+                  << "4. Defence x2  5. Show Status  0. Start Game\n"
+                  << "============================================\n"
+                  << "Choose: ";
+
+        int choice = -1;
+        if (!(std::cin >> choice) || choice < 0 || choice > 5) {
             std::cout << "Invalid input.\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            pauseScreen();
             continue;
         }
+
         switch (choice) {
         case 1: player->useHpPotion(); break;
         case 2: player->useMpPotion(); break;
-        case 3: player->setPower(player->getPower() * 2); break;
-        case 4: player->setDefence(player->getDefence() * 2); break;
+        case 3:
+            player->setPower(player->getPower() * 2);
+            std::cout << "Power doubled.\n";
+            break;
+        case 4:
+            player->setDefence(player->getDefence() * 2);
+            std::cout << "Defence doubled.\n";
+            break;
         case 5: player->printPlayerStatus(); break;
         case 0: std::cout << "Game Start!\n"; isGameStart = true; break;
         }
+
+        if (!isGameStart) pauseScreen();
     }
 
-    Monster slime("Slime", 30, 20, 10, "Slime Jelly", 10);
-    battle(player, slime);
+    std::vector<Item> inventory;
+    bool isRunning = true;
+
+    while (isRunning) {
+        clearScreen();
+        std::cout << "=== Main Menu ===\n"
+                  << "1. Enter Dungeon\n"
+                  << "2. Check Inventory\n"
+                  << "0. Quit\n"
+                  << "\nChoose: ";
+
+        int menuChoice = -1;
+        if (!(std::cin >> menuChoice)) {
+            std::cout << "Invalid input. Enter 0, 1, or 2.\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            pauseScreen();
+            continue;
+        }
+
+        switch (menuChoice) {
+        case 1: {
+            if (player->getHP() <= 0) {
+                std::cout << "You cannot enter the dungeon because your HP is 0.\n";
+                break;
+            }
+
+            Monster slime("Slime", 30, 20, 10, "Slime Jelly", 30);
+            battle(player, slime, inventory);
+            break;
+        }
+        case 2:
+            printInventory(inventory);
+            break;
+        case 0:
+            std::cout << "Goodbye!\n";
+            isRunning = false;
+            break;
+        default:
+            std::cout << "Invalid input. Enter 0, 1, or 2.\n";
+            break;
+        }
+
+        if (isRunning) pauseScreen();
+    }
 
     delete player;
     player = nullptr;
