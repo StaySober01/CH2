@@ -16,6 +16,7 @@ private:
 public:
     Monster(const std::string& name, int hp, int power, int defence,
             const std::string& dropItemName, int dropItemPrice);
+    virtual ~Monster() = default;
 
     const std::string& getName() const;
     int getHP() const;
@@ -25,5 +26,5 @@ public:
     int getDropItemPrice() const;
 
     void setHP(int value);
-    void attack(Player* player) const;
+    virtual void attack(Player* player) const;
 };

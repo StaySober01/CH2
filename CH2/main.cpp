@@ -4,12 +4,16 @@
 #include <limits>
 #include <string>
 #include <vector>
+#include "AlchemyWorkshop.h"
 #include "Archer.h"
 #include "Item.h"
 #include "Magician.h"
 #include "Monster.h"
+#include "Skeleton.h"
+#include "Slime.h"
 #include "Thief.h"
 #include "Warrior.h"
+#include "Zombie.h"
 
 int calculateDamage(int power, int defence) {
     int damage = power - defence;
@@ -87,6 +91,96 @@ void printInventory(const std::vector<Item>& inventory) {
     for (const Item& item : inventory) {
         std::cout << itemNumber++ << ". ";
         item.PrintInfo();
+    }
+}
+
+void enterDungeon(Player* player, std::vector<Item>& inventory) {
+    clearScreen();
+    std::cout << "=== Select Monster ===\n"
+              << "1. Slime\n"
+              << "2. Zombie\n"
+              << "3. Skeleton\n"
+              << "0. Back\n"
+              << "\nChoose: ";
+
+    int monsterChoice = -1;
+    if (!(std::cin >> monsterChoice)) {
+        std::cout << "Invalid input. Enter a number from 0 to 3.\n";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        return;
+    }
+
+    clearScreen();
+    switch (monsterChoice) {
+    case 1: {
+        Slime slime;
+        battle(player, slime, inventory);
+        break;
+    }
+    case 2: {
+        Zombie zombie;
+        battle(player, zombie, inventory);
+        break;
+    }
+    case 3: {
+        Skeleton skeleton;
+        battle(player, skeleton, inventory);
+        break;
+    }
+    case 0:
+        return;
+    default:
+        std::cout << "Invalid input. Enter a number from 0 to 3.\n";
+        break;
+    }
+}
+
+void openPotionWorkshop(const AlchemyWorkshop& workshop) {
+    bool isWorkshopOpen = true;
+
+    while (isWorkshopOpen) {
+        clearScreen();
+        std::cout << "=== Potion Shop ===\n"
+                  << "1. Show all recipes\n"
+                  << "2. Search by potion name\n"
+                  << "3. Search by ingredient\n"
+                  << "0. Go back\n"
+                  << "\nChoose: ";
+
+        int choice = -1;
+        if (!(std::cin >> choice)) {
+            std::cout << "Invalid input. Enter a number from 0 to 3.\n";
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            pauseScreen();
+            continue;
+        }
+
+        std::string searchText;
+        switch (choice) {
+        case 1:
+            workshop.ShowAllRecipes();
+            break;
+        case 2:
+            std::cout << "Search potion name: ";
+            std::getline(std::cin >> std::ws, searchText);
+            workshop.SearchByName(searchText);
+            break;
+        case 3:
+            std::cout << "Search ingredient: ";
+            std::getline(std::cin >> std::ws, searchText);
+            workshop.SearchByIngredient(searchText);
+            break;
+        case 0:
+            isWorkshopOpen = false;
+            continue;
+        default:
+            std::cout << "Invalid input. Enter a number from 0 to 3.\n";
+            break;
+        }
+
+        pauseScreen();
     }
 }
 
@@ -189,6 +283,7 @@ int main() {
     }
 
     std::vector<Item> inventory;
+    AlchemyWorkshop workshop;
     bool isRunning = true;
 
     while (isRunning) {
@@ -196,12 +291,13 @@ int main() {
         std::cout << "=== Main Menu ===\n"
                   << "1. Enter Dungeon\n"
                   << "2. Check Inventory\n"
+                  << "3. Potion Workshop\n"
                   << "0. Quit\n"
                   << "\nChoose: ";
 
         int menuChoice = -1;
         if (!(std::cin >> menuChoice)) {
-            std::cout << "Invalid input. Enter 0, 1, or 2.\n";
+            std::cout << "Invalid input. Enter a number from 0 to 3.\n";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             pauseScreen();
@@ -215,19 +311,21 @@ int main() {
                 break;
             }
 
-            Monster slime("Slime", 30, 20, 10, "Slime Jelly", 30);
-            battle(player, slime, inventory);
+            enterDungeon(player, inventory);
             break;
         }
         case 2:
             printInventory(inventory);
+            break;
+        case 3:
+            openPotionWorkshop(workshop);
             break;
         case 0:
             std::cout << "Goodbye!\n";
             isRunning = false;
             break;
         default:
-            std::cout << "Invalid input. Enter 0, 1, or 2.\n";
+            std::cout << "Invalid input. Enter a number from 0 to 3.\n";
             break;
         }
 

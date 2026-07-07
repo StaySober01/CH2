@@ -131,23 +131,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AlchemyWorkshop.cpp" />
     <ClCompile Include="Archer.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="Magician.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Monster.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="PotionRecipe.cpp" />
+    <ClCompile Include="Skeleton.cpp" />
+    <ClCompile Include="Slime.cpp" />
     <ClCompile Include="Thief.cpp" />
     <ClCompile Include="Warrior.cpp" />
+    <ClCompile Include="Zombie.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AlchemyWorkshop.h" />
     <ClInclude Include="Archer.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="Magician.h" />
     <ClInclude Include="Monster.h" />
     <ClInclude Include="player.h" />
+    <ClInclude Include="PotionRecipe.h" />
+    <ClInclude Include="Skeleton.h" />
+    <ClInclude Include="Slime.h" />
     <ClInclude Include="Thief.h" />
     <ClInclude Include="Warrior.h" />
+    <ClInclude Include="Zombie.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
