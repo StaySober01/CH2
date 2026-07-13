@@ -34,6 +34,7 @@
   <ItemGroup>
     <ClInclude Include="AlchemyWorkshop.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Archer.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="Inventory.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Item.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Magician.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Monster.h"><Filter>헤더 파일</Filter></ClInclude>

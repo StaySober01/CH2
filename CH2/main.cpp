@@ -35,26 +35,31 @@ void setPotion(int count, int* p_HPPotion, int* p_MPPotion) {
 }
 
 bool useBattleItem(Player* player) {
-    const std::vector<Item>& inventory = player->getInventory();
+    const Inventory<Item>& inventory = player->getInventory();
     std::cout << "[ Inventory ]\n";
 
-    if (inventory.empty()) {
+    if (inventory.GetSize() == 0) {
         std::cout << "Inventory is empty.\n";
         return false;
     }
 
     struct ItemGroup {
-        std::size_t firstIndex;
-        std::size_t count;
+        int firstIndex;
+        int count;
     };
 
     std::vector<ItemGroup> itemGroups;
-    for (std::size_t index = 0; index < inventory.size(); ++index) {
+    for (int index = 0; index < inventory.GetSize(); ++index) {
+        const Item* currentItem = inventory.GetItem(index);
+        if (currentItem == nullptr) {
+            continue;
+        }
+
         bool isGrouped = false;
         for (ItemGroup& group : itemGroups) {
-            const Item& groupedItem = inventory[group.firstIndex];
-            if (groupedItem.name == inventory[index].name &&
-                groupedItem.price == inventory[index].price) {
+            const Item* groupedItem = inventory.GetItem(group.firstIndex);
+            if (groupedItem != nullptr && groupedItem->name == currentItem->name &&
+                groupedItem->price == currentItem->price) {
                 ++group.count;
                 isGrouped = true;
                 break;
@@ -68,9 +73,11 @@ bool useBattleItem(Player* player) {
 
     for (std::size_t index = 0; index < itemGroups.size(); ++index) {
         const ItemGroup& group = itemGroups[index];
-        const Item& item = inventory[group.firstIndex];
-        std::cout << index + 1 << ". " << item.name << " x " << group.count
-                  << " (" << item.price << "G)\n";
+        const Item* item = inventory.GetItem(group.firstIndex);
+        if (item != nullptr) {
+            std::cout << index + 1 << ". " << item->name << " x " << group.count
+                      << " (" << item->price << "G)\n";
+        }
     }
 
     std::cout << "0. Back\n"
@@ -92,8 +99,13 @@ bool useBattleItem(Player* player) {
         return false;
     }
 
-    const std::size_t itemIndex = itemGroups[static_cast<std::size_t>(itemChoice - 1)].firstIndex;
-    const Item selectedItem = inventory[itemIndex];
+    const int itemIndex = itemGroups[static_cast<std::size_t>(itemChoice - 1)].firstIndex;
+    const Item* selectedItemPointer = inventory.GetItem(itemIndex);
+    if (selectedItemPointer == nullptr) {
+        std::cout << "Invalid item number.\n";
+        return false;
+    }
+    const Item selectedItem = *selectedItemPointer;
 
     if (selectedItem.name == "HP Potion") {
         const int beforeHP = player->getHP();
@@ -112,7 +124,7 @@ bool useBattleItem(Player* player) {
         return false;
     }
 
-    return player->removeItem(itemIndex);
+    return player->removeItem(static_cast<std::size_t>(itemIndex));
 }
 
 void battle(Player* player, Monster& monster) {
@@ -184,20 +196,16 @@ void battle(Player* player, Monster& monster) {
 }
 
 void printInventory(const Player& player) {
-    const std::vector<Item>& inventory = player.getInventory();
-    std::cout << "\n[ Inventory (" << inventory.size() << '/'
-              << Player::MAX_INVENTORY_SIZE << ") ]\n";
+    const Inventory<Item>& inventory = player.getInventory();
+    std::cout << "\n[ Inventory (" << inventory.GetSize() << '/'
+              << inventory.GetCapacity() << ") ]\n";
 
-    if (inventory.empty()) {
+    if (inventory.GetSize() == 0) {
         std::cout << "Inventory is empty.\n";
         return;
     }
 
-    int itemNumber = 1;
-    for (const Item& item : inventory) {
-        std::cout << itemNumber++ << ". ";
-        item.PrintInfo();
-    }
+    inventory.PrintAllItems();
 }
 
 void enterDungeon(Player* player) {

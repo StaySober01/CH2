@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <string>
-#include <vector>
+#include "Inventory.h"
 #include "Item.h"
 
 class Monster;
@@ -21,7 +21,7 @@ protected:
     int defence;
     int curHpPotion;
     int curMpPotion;
-    std::vector<Item> inventory;
+    Inventory<Item> inventory;
 
 public:
     static constexpr std::size_t MAX_INVENTORY_SIZE = 10;
@@ -62,6 +62,6 @@ public:
     void useMpPotion();
     bool addItem(const Item& item);
     bool removeItem(std::size_t index);
-    const std::vector<Item>& getInventory() const;
+    const Inventory<Item>& getInventory() const;
     virtual void attack(Monster* monster) = 0;
 };

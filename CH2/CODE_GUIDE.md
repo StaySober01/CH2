@@ -9,6 +9,7 @@
 - `Warrior`, `Magician`, `Thief`, `Archer`: `Player`를 상속한 직업 클래스다.
 - `Monster`와 `Slime`, `Zombie`, `Skeleton`: 몬스터의 공통 부분과 종류별 차이를 표현한다.
 - `Item`: 전투에서 얻는 아이템 한 개를 표현한다.
+- `Inventory.h`: 어떤 자료형이든 보관할 수 있는 `Inventory<T>` 템플릿과 동적 배열을 정의한다.
 - `PotionRecipe`: 포션 레시피 한 개를 표현한다.
 - `AlchemyWorkshop`: 여러 레시피를 보관하고 검색한다.
 - `CH2.vcxproj`, `CH2.vcxproj.filters`: Visual Studio가 어떤 소스 파일을 빌드하고 솔루션 탐색기에 어떻게 보여 줄지 기록한다.
@@ -110,6 +111,8 @@ while (true) {
 ## 3. 스탯 관리 메뉴 (`0afb87a`)
 
 캐릭터에게 포션을 지급하고, 사용자가 메뉴를 반복해서 선택할 수 있게 했다.
+
+> 현재 진행본에서는 `< Character Upgrade >` 메뉴 루프 전체가 주석 처리되어 있다. 아래 내용은 해당 커밋에서 어떤 반복문과 포션 기능을 학습했는지 설명하는 기록이다. 포션은 지금도 지급되지만 실제 아이템으로 인벤토리에 들어가며 전투 중 사용할 수 있다.
 
 ### 상태를 기억하는 멤버 변수
 
@@ -274,7 +277,7 @@ struct Item {
 
 `Item`은 이름과 가격을 묶은 작은 자료형이다. `class`와 `struct`는 거의 같지만, `struct`의 멤버는 기본적으로 `public`이다. 단순한 데이터 묶음에는 `struct`가 읽기 편하다.
 
-### 크기가 변하는 배열 `std::vector`
+### 초기 구현: 크기가 변하는 배열 `std::vector`
 
 ```cpp
 class Player {
@@ -282,7 +285,7 @@ class Player {
 };
 ```
 
-`std::vector`는 실행 중 원소 수가 달라질 수 있는 컨테이너다. 현재 인벤토리는 `Player`가 직접 소유하므로 플레이어의 다른 상태와 함께 유지된다. `push_back()`으로 아이템을 뒤에 추가하고, `size()`로 개수를 확인하며, `empty()`로 비었는지 검사한다.
+`std::vector`는 실행 중 원소 수가 달라질 수 있는 컨테이너다. 이 단계에서는 `Player`가 `std::vector<Item>`을 직접 소유했다. `push_back()`으로 아이템을 뒤에 추가하고, `size()`로 개수를 확인하며, `empty()`로 비었는지 검사했다.
 
 ```cpp
 if (inventory.size() < Player::MAX_INVENTORY_SIZE) {
@@ -290,7 +293,7 @@ if (inventory.size() < Player::MAX_INVENTORY_SIZE) {
 }
 ```
 
-`Player::MAX_INVENTORY_SIZE`는 `constexpr`로 선언되어 실행 중 변하지 않는 상수임을 나타낸다. 벡터 자체에는 더 들어갈 수 있지만, `Player::addItem()`이 게임 규칙으로 최대 10개를 제한한다.
+`Player::MAX_INVENTORY_SIZE`는 `constexpr`로 선언되어 실행 중 변하지 않는 상수임을 나타낸다. 당시에는 벡터 자체에 더 들어갈 수 있지만, `Player::addItem()`이 게임 규칙으로 최대 10개를 제한했다. 현재 코드는 뒤에서 설명할 `Inventory<Item>`으로 교체되어 용량 제한을 컨테이너가 직접 관리한다.
 
 `Player::getInventory()`는 `const` 참조를 반환한다. 복사 비용을 피하면서도 외부 함수가 인벤토리를 직접 수정하지 못하게 하는 좋은 읽기 전용 접근 방식이다.
 
@@ -314,7 +317,7 @@ for (const Item& item : inventory) {
 
 ## 7. 포션 제작소 기본 기능 (`cf71da9`)
 
-마지막 커밋은 몬스터 종류를 늘리고 포션 레시피 조회 기능을 추가한다. 이제 상속과 객체 합성이 양쪽에서 사용된다.
+이 커밋은 몬스터 종류를 늘리고 포션 레시피 조회 기능을 추가한다. 이제 상속과 객체 합성이 양쪽에서 사용된다.
 
 ### 몬스터 상속 구조
 
@@ -364,27 +367,149 @@ std::getline(std::cin >> std::ws, searchText);
 
 1. 이름과 초기 능력치를 입력한다.
 2. 직업을 선택하고 직업별 보너스를 받는다.
-3. 포션과 능력치 강화 메뉴를 사용한다.
-4. 메인 메뉴에서 던전, 인벤토리, 포션 제작소 중 하나를 고른다.
-5. 던전에서는 몬스터를 선택해 전투하고 승리 아이템을 인벤토리에 저장한다.
-6. 종료를 선택할 때까지 메인 메뉴를 반복한다.
-7. 마지막에 동적으로 생성한 플레이어를 `delete`한다.
+3. HP 포션 5개와 MP 포션 5개를 인벤토리로 받는다.
+4. 기존 능력치 강화 메뉴는 주석 처리되어 바로 메인 메뉴로 이동한다.
+5. 메인 메뉴에서 던전, 인벤토리, 포션 제작소 중 하나를 고른다.
+6. 던전에서는 매 턴 공격 또는 아이템 사용을 선택한다.
+7. 전투에서 승리하면 경험치와 드롭 아이템을 얻는다.
+8. 종료를 선택할 때까지 메인 메뉴를 반복한다.
+9. 마지막에 동적으로 생성한 플레이어를 `delete`한다.
+
+---
+
+## 8. 전투 중 포션 사용
+
+플레이어 턴마다 곧바로 공격하던 구조를 메뉴 선택 방식으로 바꿨다.
+
+```text
+--- Player Turn ---
+1. Attack
+2. Use Item
+Choose:
+```
+
+`Use Item`을 선택하면 같은 이름과 가격을 가진 아이템을 한 줄로 묶어 보여 준다.
+
+```text
+[ Inventory ]
+1. HP Potion x 5 (50G)
+2. MP Potion x 5 (50G)
+0. Back
+Choose item:
+```
+
+`0`을 입력하면 턴을 소비하지 않고 `Attack / Use Item` 선택으로 돌아간다. 잘못된 번호나 숫자가 아닌 입력도 아이템 인덱스로 사용하지 않고 다시 선택하게 한다.
+
+HP 포션과 MP 포션은 각각 50을 회복하지만 `std::min()`으로 최대 HP와 MP를 넘지 않게 제한한다.
+
+```cpp
+player->setHP(std::min(player->getHP() + 50, player->getMaxHP()));
+player->setMP(std::min(player->getMP() + 50, player->getMaxMP()));
+```
+
+선택한 포션은 회복 처리 후 인벤토리에서 한 개만 제거한다. 그래서 `HP Potion x 5`를 한 번 사용하면 다음 출력은 `HP Potion x 4`가 된다. 포션 사용도 플레이어의 한 턴이므로 그 뒤에는 살아 있는 몬스터가 공격한다.
+
+---
+
+## 9. 도전 STEP 5: `Inventory<T>` 직접 구현
+
+기존 `std::vector<Item>` 대신 [Inventory.h](Inventory.h)의 `Inventory<T>`가 아이템 저장 공간을 직접 관리한다. 템플릿을 사용했기 때문에 `Item` 이외의 자료형도 같은 컨테이너에 보관할 수 있다.
+
+```cpp
+template<typename T>
+class Inventory {
+private:
+    T* pItems_;
+    int capacity_;
+    int size_;
+};
+```
+
+### 템플릿 코드를 헤더에 작성하는 이유
+
+컴파일러는 `Inventory<Item>`처럼 실제 자료형이 정해지는 지점에서 템플릿 코드를 이용해 구체적인 클래스를 만든다. 따라서 선언만 헤더에 두고 구현을 일반 `.cpp`로 분리하면 필요한 구현을 찾지 못할 수 있다. 현재 프로젝트는 템플릿 선언과 구현을 모두 `Inventory.h`에 둔다.
+
+### 생성자와 소멸자의 동적 메모리 관리
+
+생성자는 지정된 용량만큼 배열을 만들고 현재 아이템 수를 0으로 시작한다.
+
+```cpp
+explicit Inventory(int capacity = 10)
+    : pItems_(nullptr), capacity_(capacity > 0 ? capacity : 1), size_(0) {
+    pItems_ = new T[capacity_];
+}
+```
+
+`new[]`로 만든 배열은 반드시 `delete[]`로 해제해야 한다. 소멸자가 이 작업을 담당하므로 `Inventory` 객체의 수명이 끝날 때 저장 공간도 정리된다.
+
+```cpp
+~Inventory() {
+    delete[] pItems_;
+}
+```
+
+### 아이템 추가와 삭제
+
+`AddItem()`은 `size_`가 `capacity_`보다 작을 때만 새 원소를 저장한다. 공간이 없다면 `false`를 반환하여 전투 보상 코드가 `Inventory is full.`을 출력할 수 있게 한다.
+
+`RemoveLastItem()`은 마지막 원소를 제거하고 `size_`를 하나 줄인다. 전투에서는 사용자가 중간 위치의 포션을 선택할 수도 있으므로 보조 함수 `RemoveItem(index)`도 구현했다. 이 함수는 인덱스 범위를 검사하고 뒤쪽 원소를 한 칸씩 앞으로 옮긴 다음 `RemoveLastItem()`을 호출한다.
+
+```cpp
+for (int moveIndex = index; moveIndex < size_ - 1; ++moveIndex) {
+    pItems_[moveIndex] = pItems_[moveIndex + 1];
+}
+
+return RemoveLastItem();
+```
+
+`GetItem()`은 잘못된 인덱스라면 `nullptr`를 반환한다. 호출하는 쪽은 포인터가 유효한지 확인한 뒤 아이템에 접근하므로 배열 범위를 벗어나지 않는다.
+
+### 깊은 복사와 Rule of Three
+
+`pItems_` 주소만 복사하는 얕은 복사를 사용하면 두 인벤토리가 같은 배열을 가리킨다. 한 객체가 소멸하면서 배열을 해제하면 다른 객체의 포인터가 무효가 되고, 나중에 같은 메모리를 두 번 해제할 수도 있다.
+
+복사 생성자는 새로운 배열을 할당하고 기존 아이템을 하나씩 복사한다.
+
+```cpp
+Inventory(const Inventory& other)
+    : pItems_(new T[other.capacity_]),
+      capacity_(other.capacity_),
+      size_(other.size_) {
+    for (int index = 0; index < size_; ++index) {
+        pItems_[index] = other.pItems_[index];
+    }
+}
+```
+
+복사 대입 연산자도 자기 자신을 대입하는 경우를 먼저 확인하고, 새 배열에 복사한 뒤 기존 배열을 해제한다. 현재 `Inventory<T>`는 소멸자, 복사 생성자, 복사 대입 연산자를 모두 직접 구현했으므로 **Rule of Three**를 만족한다.
+
+### `Player`와의 연결
+
+`Player`는 이제 표준 벡터 대신 직접 만든 인벤토리를 멤버로 소유한다.
+
+```cpp
+Inventory<Item> inventory;
+```
+
+`Player::addItem()`과 `removeItem()`은 각각 `Inventory<Item>::AddItem()`과 `RemoveItem()`에 작업을 전달한다. 메인 메뉴의 인벤토리 출력은 `PrintAllItems()`, 현재 개수는 `GetSize()`, 최대 용량은 `GetCapacity()`를 사용한다. 인벤토리의 수명은 여전히 `Player` 객체와 같으므로 메뉴나 전투가 끝나도 아이템이 유지된다.
 
 ---
 
 ## 현재 코드를 읽는 추천 순서
 
 1. `main.cpp`의 `main()`만 읽으며 게임의 큰 흐름을 파악한다.
-2. `player.h`와 `Player.cpp`에서 플레이어의 공통 상태를 확인한다.
-3. 네 직업의 헤더와 소스를 비교해 달라지는 부분만 찾는다.
-4. `Monster.h`, `Monster.cpp`와 세 몬스터를 같은 방식으로 비교한다.
-5. `battle()`, `enterDungeon()`, `printInventory()`를 따라 데이터가 어떻게 전달되는지 본다.
-6. `PotionRecipe`와 `AlchemyWorkshop`을 읽으며 “레시피 한 개”와 “레시피 관리자”의 책임 차이를 본다.
+2. `Inventory.h`에서 템플릿과 동적 배열의 생성·복사·해제를 확인한다.
+3. `player.h`와 `Player.cpp`에서 `Inventory<Item>`이 플레이어에게 연결되는 방식을 본다.
+4. 네 직업의 헤더와 소스를 비교해 달라지는 부분만 찾는다.
+5. `Monster.h`, `Monster.cpp`와 세 몬스터를 같은 방식으로 비교한다.
+6. `battle()`, `useBattleItem()`, `enterDungeon()`, `printInventory()`를 따라 데이터가 어떻게 전달되는지 본다.
+7. `PotionRecipe`와 `AlchemyWorkshop`을 읽으며 “레시피 한 개”와 “레시피 관리자”의 책임 차이를 본다.
 
 ## 입문자가 직접 해 볼 연습
 
 - `Goblin` 클래스를 추가하고 고블린만의 능력치, 드롭 아이템, 공격 문장을 정한다.
-- 인벤토리 최대 크기를 바꾸고 꽉 찼을 때의 동작을 확인한다.
+- `Inventory<Item>`의 생성자 인자로 최대 크기를 바꾸고 꽉 찼을 때의 동작을 확인한다.
+- `Inventory<int>`를 만든 뒤 복사 생성자와 복사 대입 연산자가 깊은 복사를 하는지 확인한다.
 - 포션 레시피를 하나 추가한 뒤 이름 검색과 재료 검색이 모두 되는지 확인한다.
 - 전투에서 HP가 음수가 되지 않도록 `setHP()` 또는 피해 처리 함수를 개선한다.
 - `new`/`delete`를 `std::unique_ptr<Player>`로 바꿔 자동 메모리 관리를 연습한다.

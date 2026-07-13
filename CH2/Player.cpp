@@ -1,5 +1,4 @@
 #include "player.h"
-#include <algorithm>
 #include <iostream>
 
 Player::Player(const std::string& name, int hp, int mp, int power, int defence)
@@ -83,48 +82,52 @@ void Player::gainMpPotion(int amount) {
 }
 
 bool Player::addItem(const Item& item) {
-    if (inventory.size() >= MAX_INVENTORY_SIZE) {
-        return false;
-    }
-
-    inventory.push_back(item);
-    return true;
+    return inventory.AddItem(item);
 }
 
 bool Player::removeItem(std::size_t index) {
-    if (index >= inventory.size()) {
+    if (index >= static_cast<std::size_t>(inventory.GetSize())) {
         return false;
     }
 
-    if (inventory[index].name == "HP Potion" && curHpPotion > 0) {
+    const Item* item = inventory.GetItem(static_cast<int>(index));
+    if (item == nullptr) {
+        return false;
+    }
+
+    if (item->name == "HP Potion" && curHpPotion > 0) {
         --curHpPotion;
     }
-    else if (inventory[index].name == "MP Potion" && curMpPotion > 0) {
+    else if (item->name == "MP Potion" && curMpPotion > 0) {
         --curMpPotion;
     }
 
-    inventory.erase(inventory.begin() + static_cast<std::ptrdiff_t>(index));
-    return true;
+    return inventory.RemoveItem(static_cast<int>(index));
 }
 
-const std::vector<Item>& Player::getInventory() const { return inventory; }
+const Inventory<Item>& Player::getInventory() const { return inventory; }
 
 void Player::useHpPotion() {
     if (curHpPotion <= 0) {
         std::cout << "You don't have an HP potion.\n";
         return;
     }
-    const auto potion = std::find_if(inventory.begin(), inventory.end(), [](const Item& item) {
-        return item.name == "HP Potion";
-    });
-    if (potion == inventory.end()) {
+    int potionIndex = -1;
+    for (int index = 0; index < inventory.GetSize(); ++index) {
+        const Item* item = inventory.GetItem(index);
+        if (item != nullptr && item->name == "HP Potion") {
+            potionIndex = index;
+            break;
+        }
+    }
+    if (potionIndex < 0) {
         std::cout << "You don't have an HP potion.\n";
         return;
     }
 
     hp += 20;
     maxHp += 20;
-    removeItem(static_cast<std::size_t>(potion - inventory.begin()));
+    removeItem(static_cast<std::size_t>(potionIndex));
     std::cout << "You recovered 20 HP. (HP potions: " << curHpPotion << ")\n";
 }
 
@@ -133,16 +136,21 @@ void Player::useMpPotion() {
         std::cout << "You don't have an MP potion.\n";
         return;
     }
-    const auto potion = std::find_if(inventory.begin(), inventory.end(), [](const Item& item) {
-        return item.name == "MP Potion";
-    });
-    if (potion == inventory.end()) {
+    int potionIndex = -1;
+    for (int index = 0; index < inventory.GetSize(); ++index) {
+        const Item* item = inventory.GetItem(index);
+        if (item != nullptr && item->name == "MP Potion") {
+            potionIndex = index;
+            break;
+        }
+    }
+    if (potionIndex < 0) {
         std::cout << "You don't have an MP potion.\n";
         return;
     }
 
     mp += 20;
     maxMp += 20;
-    removeItem(static_cast<std::size_t>(potion - inventory.begin()));
+    removeItem(static_cast<std::size_t>(potionIndex));
     std::cout << "You recovered 20 MP. (MP potions: " << curMpPotion << ")\n";
 }
