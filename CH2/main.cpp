@@ -30,6 +30,11 @@ void pauseScreen() {
     std::system("pause");
 }
 
+void setPotion(int count, int* p_HPPotion, int* p_MPPotion) {
+    *p_HPPotion = count;
+    *p_MPPotion = count;
+}
+
 void battle(Player* player, Monster& monster, std::vector<Item>& inventory) {
     std::cout << "\n[ Battle Start! ] " << player->getName() << '(' << player->getJob()
               << ") vs " << monster.getName() << "\n";
@@ -240,8 +245,12 @@ int main() {
               << bonusStat.at(static_cast<std::size_t>(jobChoice)) << " +30)\n";
     player->attack();
     player->printPlayerStatus();
-    player->gainHpPotion(5);
-    player->gainMpPotion(5);
+
+    int HPPotion = 0;
+    int MPPotion = 0;
+    setPotion(5, &HPPotion, &MPPotion);
+    player->gainHpPotion(HPPotion);
+    player->gainMpPotion(MPPotion);
     std::cout << "* You received 5 HP Potions and 5 MP Potions.\n";
     pauseScreen();
 
