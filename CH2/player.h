@@ -15,6 +15,8 @@ protected:
     int maxExp;
     int hp;
     int mp;
+    int maxHp;
+    int maxMp;
     int power;
     int defence;
     int curHpPotion;
@@ -35,6 +37,9 @@ public:
     int getHp() const;
     int getHP() const;
     int getMp() const;
+    int getMP() const;
+    int getMaxHP() const;
+    int getMaxMP() const;
     int getPower() const;
     int getDefence() const;
     void setName(const std::string& value);
@@ -43,6 +48,7 @@ public:
     void setHp(int value);
     void setHP(int value);
     void setMp(int value);
+    void setMP(int value);
     void setPower(int value);
     void setDefence(int value);
 
@@ -55,6 +61,7 @@ public:
     void useHpPotion();
     void useMpPotion();
     bool addItem(const Item& item);
+    bool removeItem(std::size_t index);
     const std::vector<Item>& getInventory() const;
     virtual void attack(Monster* monster) = 0;
 };

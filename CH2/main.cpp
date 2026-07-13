@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <iostream>
@@ -33,17 +34,122 @@ void setPotion(int count, int* p_HPPotion, int* p_MPPotion) {
     *p_MPPotion = count;
 }
 
+bool useBattleItem(Player* player) {
+    const std::vector<Item>& inventory = player->getInventory();
+    std::cout << "[ Inventory ]\n";
+
+    if (inventory.empty()) {
+        std::cout << "Inventory is empty.\n";
+        return false;
+    }
+
+    struct ItemGroup {
+        std::size_t firstIndex;
+        std::size_t count;
+    };
+
+    std::vector<ItemGroup> itemGroups;
+    for (std::size_t index = 0; index < inventory.size(); ++index) {
+        bool isGrouped = false;
+        for (ItemGroup& group : itemGroups) {
+            const Item& groupedItem = inventory[group.firstIndex];
+            if (groupedItem.name == inventory[index].name &&
+                groupedItem.price == inventory[index].price) {
+                ++group.count;
+                isGrouped = true;
+                break;
+            }
+        }
+
+        if (!isGrouped) {
+            itemGroups.push_back({ index, 1 });
+        }
+    }
+
+    for (std::size_t index = 0; index < itemGroups.size(); ++index) {
+        const ItemGroup& group = itemGroups[index];
+        const Item& item = inventory[group.firstIndex];
+        std::cout << index + 1 << ". " << item.name << " x " << group.count
+                  << " (" << item.price << "G)\n";
+    }
+
+    std::cout << "0. Back\n"
+              << "Choose item: ";
+    int itemChoice = 0;
+    if (!(std::cin >> itemChoice)) {
+        std::cout << "Invalid input. Enter an item number.\n";
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        return false;
+    }
+
+    if (itemChoice == 0) {
+        return false;
+    }
+
+    if (itemChoice < 0 || static_cast<std::size_t>(itemChoice) > itemGroups.size()) {
+        std::cout << "Invalid item number.\n";
+        return false;
+    }
+
+    const std::size_t itemIndex = itemGroups[static_cast<std::size_t>(itemChoice - 1)].firstIndex;
+    const Item selectedItem = inventory[itemIndex];
+
+    if (selectedItem.name == "HP Potion") {
+        const int beforeHP = player->getHP();
+        player->setHP(std::min(player->getHP() + 50, player->getMaxHP()));
+        std::cout << "- HP Potion used! HP restored by 50 (" << beforeHP
+                  << " -> " << player->getHP() << ")\n";
+    }
+    else if (selectedItem.name == "MP Potion") {
+        const int beforeMP = player->getMP();
+        player->setMP(std::min(player->getMP() + 50, player->getMaxMP()));
+        std::cout << "- MP Potion used! MP restored by 50 (" << beforeMP
+                  << " -> " << player->getMP() << ")\n";
+    }
+    else {
+        std::cout << "This item cannot be used in battle.\n";
+        return false;
+    }
+
+    return player->removeItem(itemIndex);
+}
+
 void battle(Player* player, Monster& monster) {
     std::cout << "\n[ Battle Start! ] " << player->getName() << '(' << player->getJob()
               << ") vs " << monster.getName() << "\n";
 
     while (player->getHP() > 0 && monster.getHP() > 0) {
         std::cout << "\n--- Player Turn ---\n";
-        int beforeHP = monster.getHP();
-        player->attack(&monster);
-        std::cout << monster.getName() << " HP: " << beforeHP << " -> " << monster.getHP();
-        if (monster.getHP() <= 0) std::cout << " (Dead)";
-        std::cout << '\n';
+        bool actionCompleted = false;
+        while (!actionCompleted) {
+            std::cout << "1. Attack\n"
+                      << "2. Use Item\n"
+                      << "Choose: ";
+
+            int actionChoice = 0;
+            if (!(std::cin >> actionChoice)) {
+                std::cout << "Invalid input. Enter 1 or 2.\n";
+                std::cin.clear();
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                continue;
+            }
+
+            if (actionChoice == 1) {
+                int beforeHP = monster.getHP();
+                player->attack(&monster);
+                std::cout << monster.getName() << " HP: " << beforeHP << " -> " << monster.getHP();
+                if (monster.getHP() <= 0) std::cout << " (Dead)";
+                std::cout << '\n';
+                actionCompleted = true;
+            }
+            else if (actionChoice == 2) {
+                actionCompleted = useBattleItem(player);
+            }
+            else {
+                std::cout << "Invalid input. Enter 1 or 2.\n";
+            }
+        }
 
         if (monster.getHP() <= 0) break;
 
@@ -51,7 +157,7 @@ void battle(Player* player, Monster& monster) {
         monster.attack(player);
 
         int damage = calculateDamage(monster.getPower(), player->getDefence());
-        beforeHP = player->getHP();
+        int beforeHP = player->getHP();
         player->setHP(beforeHP - damage);
         std::cout << damage << " damage to " << player->getName() << "!\n"
                   << player->getName() << " HP: " << beforeHP << " -> " << player->getHP();
@@ -248,6 +354,7 @@ int main() {
     std::cout << "* You received 5 HP Potions and 5 MP Potions.\n";
     pauseScreen();
 
+    /* Character Upgrade stat management disabled.
     bool isGameStart = false;
     while (!isGameStart) {
         clearScreen();
@@ -284,6 +391,7 @@ int main() {
 
         if (!isGameStart) pauseScreen();
     }
+    */
 
     AlchemyWorkshop workshop;
     bool isRunning = true;
