@@ -20,8 +20,6 @@ int calculateDamage(int power, int defence) {
     return damage > 0 ? damage : 1;
 }
 
-constexpr std::size_t MAX_INVENTORY_SIZE = 10;
-
 void clearScreen() {
     std::system("cls");
 }
@@ -35,7 +33,7 @@ void setPotion(int count, int* p_HPPotion, int* p_MPPotion) {
     *p_MPPotion = count;
 }
 
-void battle(Player* player, Monster& monster, std::vector<Item>& inventory) {
+void battle(Player* player, Monster& monster) {
     std::cout << "\n[ Battle Start! ] " << player->getName() << '(' << player->getJob()
               << ") vs " << monster.getName() << "\n";
 
@@ -67,11 +65,11 @@ void battle(Player* player, Monster& monster, std::vector<Item>& inventory) {
 
     if (monster.getHP() <= 0) {
         Item droppedItem{ monster.getDropItemName(), monster.getDropItemPrice() };
-        std::cout << "\n[==Victory!==]\n"
-                  << "  -> Got: " << droppedItem.name << "!\n";
+        std::cout << "\n★ Victory!\n";
+        player->gainExp(monster.getExpReward());
+        std::cout << "  -> Got: " << droppedItem.name << "!\n";
 
-        if (inventory.size() < MAX_INVENTORY_SIZE) {
-            inventory.push_back(droppedItem);
+        if (player->addItem(droppedItem)) {
             std::cout << "  -> Saved to inventory.\n";
         }
         else {
@@ -83,9 +81,10 @@ void battle(Player* player, Monster& monster, std::vector<Item>& inventory) {
     }
 }
 
-void printInventory(const std::vector<Item>& inventory) {
+void printInventory(const Player& player) {
+    const std::vector<Item>& inventory = player.getInventory();
     std::cout << "\n[ Inventory (" << inventory.size() << '/'
-              << MAX_INVENTORY_SIZE << ") ]\n";
+              << Player::MAX_INVENTORY_SIZE << ") ]\n";
 
     if (inventory.empty()) {
         std::cout << "Inventory is empty.\n";
@@ -99,7 +98,7 @@ void printInventory(const std::vector<Item>& inventory) {
     }
 }
 
-void enterDungeon(Player* player, std::vector<Item>& inventory) {
+void enterDungeon(Player* player) {
     clearScreen();
     std::cout << "=== Select Monster ===\n"
               << "1. Slime\n"
@@ -120,17 +119,17 @@ void enterDungeon(Player* player, std::vector<Item>& inventory) {
     switch (monsterChoice) {
     case 1: {
         Slime slime;
-        battle(player, slime, inventory);
+        battle(player, slime);
         break;
     }
     case 2: {
         Zombie zombie;
-        battle(player, zombie, inventory);
+        battle(player, zombie);
         break;
     }
     case 3: {
         Skeleton skeleton;
-        battle(player, skeleton, inventory);
+        battle(player, skeleton);
         break;
     }
     case 0:
@@ -291,7 +290,6 @@ int main() {
         if (!isGameStart) pauseScreen();
     }
 
-    std::vector<Item> inventory;
     AlchemyWorkshop workshop;
     bool isRunning = true;
 
@@ -320,11 +318,11 @@ int main() {
                 break;
             }
 
-            enterDungeon(player, inventory);
+            enterDungeon(player);
             break;
         }
         case 2:
-            printInventory(inventory);
+            printInventory(*player);
             break;
         case 3:
             openPotionWorkshop(workshop);

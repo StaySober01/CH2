@@ -2,12 +2,14 @@
 #include <iostream>
 
 Player::Player(const std::string& name, int hp, int mp, int power, int defence)
-    : name(name), job("None"), level(1), hp(hp), mp(mp), power(power),
+    : name(name), job("None"), level(1), exp(0), maxExp(100), hp(hp), mp(mp), power(power),
       defence(defence), curHpPotion(0), curMpPotion(0) {}
 
 const std::string& Player::getName() const { return name; }
 const std::string& Player::getJob() const { return job; }
 int Player::getLevel() const { return level; }
+int Player::getExp() const { return exp; }
+int Player::getMaxExp() const { return maxExp; }
 int Player::getHp() const { return hp; }
 int Player::getHP() const { return hp; }
 int Player::getMp() const { return mp; }
@@ -25,6 +27,7 @@ void Player::setDefence(int value) { defence = value; }
 void Player::printPlayerStatus() const {
     std::cout << "------------------------------------\n"
               << "Name: " << name << " | Job: " << job << " | Lv." << level << '\n'
+              << "EXP: " << exp << '/' << maxExp << '\n'
               << "HP: " << hp << " | MP: " << mp << " | Attack: " << power
               << " | Defense: " << defence << '\n'
               << "------------------------------------\n";
@@ -32,8 +35,41 @@ void Player::printPlayerStatus() const {
 
 void Player::takeDamage(int damage) { hp -= damage; }
 void Player::consumeMp(int amount) { mp -= amount; }
+
+void Player::gainExp(int amount) {
+    exp += amount;
+    std::cout << "  -> +" << amount << " EXP! (EXP: " << exp << '/' << maxExp << ")\n";
+
+    if (exp < maxExp) {
+        return;
+    }
+
+    int previousLevel = level;
+    ++level;
+    hp += 10;
+    mp += 5;
+    power += 5;
+    exp = 0;
+    maxExp += 50;
+
+    std::cout << "  -> Level Up! Lv." << previousLevel << " -> Lv." << level << '\n'
+              << "  -> HP +10, MP +5, Attack +5\n"
+              << "  -> Next Level EXP: " << maxExp << '\n';
+}
+
 void Player::gainHpPotion(int amount) { curHpPotion += amount; }
 void Player::gainMpPotion(int amount) { curMpPotion += amount; }
+
+bool Player::addItem(const Item& item) {
+    if (inventory.size() >= MAX_INVENTORY_SIZE) {
+        return false;
+    }
+
+    inventory.push_back(item);
+    return true;
+}
+
+const std::vector<Item>& Player::getInventory() const { return inventory; }
 
 void Player::useHpPotion() {
     if (curHpPotion <= 0) {

@@ -276,20 +276,22 @@ struct Item {
 ### 크기가 변하는 배열 `std::vector`
 
 ```cpp
-std::vector<Item> inventory;
+class Player {
+    std::vector<Item> inventory;
+};
 ```
 
-`std::vector`는 실행 중 원소 수가 달라질 수 있는 컨테이너다. `push_back()`으로 아이템을 뒤에 추가하고, `size()`로 개수를 확인하며, `empty()`로 비었는지 검사한다.
+`std::vector`는 실행 중 원소 수가 달라질 수 있는 컨테이너다. 현재 인벤토리는 `Player`가 직접 소유하므로 플레이어의 다른 상태와 함께 유지된다. `push_back()`으로 아이템을 뒤에 추가하고, `size()`로 개수를 확인하며, `empty()`로 비었는지 검사한다.
 
 ```cpp
-if (inventory.size() < MAX_INVENTORY_SIZE) {
+if (inventory.size() < Player::MAX_INVENTORY_SIZE) {
     inventory.push_back(droppedItem);
 }
 ```
 
-`MAX_INVENTORY_SIZE`는 `constexpr`로 선언되어 실행 중 변하지 않는 상수임을 나타낸다. 벡터 자체에는 더 들어갈 수 있지만, 게임 규칙으로 최대 10개를 제한한다.
+`Player::MAX_INVENTORY_SIZE`는 `constexpr`로 선언되어 실행 중 변하지 않는 상수임을 나타낸다. 벡터 자체에는 더 들어갈 수 있지만, `Player::addItem()`이 게임 규칙으로 최대 10개를 제한한다.
 
-`printInventory(const std::vector<Item>& inventory)`는 `const` 참조로 벡터를 받는다. 복사 비용을 피하면서도 함수가 인벤토리를 수정하지 못하게 하는 좋은 읽기 전용 매개변수 방식이다.
+`Player::getInventory()`는 `const` 참조를 반환한다. 복사 비용을 피하면서도 외부 함수가 인벤토리를 직접 수정하지 못하게 하는 좋은 읽기 전용 접근 방식이다.
 
 범위 기반 `for`문도 등장한다.
 
@@ -303,7 +305,7 @@ for (const Item& item : inventory) {
 
 ### 상태의 수명
 
-`inventory`는 `battle()` 안이 아니라 `main()`의 메인 메뉴 바깥에 만들어진다. 전투 함수 안에 만들었다면 전투가 끝날 때마다 사라진다. 여러 메뉴 방문과 전투 사이에 유지되어야 하는 데이터는 그것을 사용하는 함수보다 **더 오래 살아 있는 범위**에 두어야 한다.
+`inventory`는 `battle()`의 지역 변수가 아니라 게임이 끝날 때까지 살아 있는 `Player` 객체의 멤버다. 전투 함수 안에 만들었다면 전투가 끝날 때마다 사라진다. 여러 메뉴 방문과 전투 사이에 유지되어야 하는 데이터는 그것을 사용하는 함수보다 **더 오래 살아 있는 객체**가 소유해야 한다.
 
 `clearScreen()`과 `pauseScreen()`은 각각 Windows의 `cls`, `pause` 명령을 실행해 콘솔 화면 흐름을 정돈한다. `std::system()`과 이 명령들은 운영체제 의존적이므로 이 프로젝트는 Windows 콘솔을 전제로 한다.
 
@@ -315,14 +317,16 @@ for (const Item& item : inventory) {
 
 ### 몬스터 상속 구조
 
-`Monster`는 공통 능력치뿐 아니라 드롭 아이템 이름과 가격도 가진다. `Slime`, `Zombie`, `Skeleton`은 생성자에서 서로 다른 값을 부모에게 전달한다.
+`Monster`는 공통 능력치뿐 아니라 드롭 아이템 이름과 가격, 보상 경험치도 가진다. `Slime`, `Zombie`, `Skeleton`은 생성자에서 서로 다른 값을 부모에게 전달한다.
 
 ```cpp
 Slime::Slime()
-    : Monster("Slime", 30, 20, 10, "Slime Jelly", 30) {}
+    : Monster("Slime", 30, 20, 10, "Slime Jelly", 30, 30) {}
 ```
 
-각 자식 클래스는 `attack()`을 `override`하여 다른 공격 문장을 출력한다. `enterDungeon()`은 사용자가 고른 몬스터를 지역 객체로 만든 뒤 모두 같은 `battle(Player*, Monster&, ...)` 함수에 전달한다. `Monster&`가 자식 객체도 받을 수 있고 가상 함수가 실제 몬스터의 공격을 선택하기 때문에 전투 코드를 복사할 필요가 없다.
+전투에서 승리하면 몬스터의 `expReward`를 `Player::gainExp()`에 전달한다. 경험치가 `maxExp` 이상이면 레벨과 능력치를 올리고 경험치를 0으로 초기화한다. 다음 레벨에 필요한 경험치는 50씩 증가한다.
+
+각 자식 클래스는 `attack()`을 `override`하여 다른 공격 문장을 출력한다. `enterDungeon()`은 사용자가 고른 몬스터를 지역 객체로 만든 뒤 모두 같은 `battle(Player*, Monster&)` 함수에 전달한다. `Monster&`가 자식 객체도 받을 수 있고 가상 함수가 실제 몬스터의 공격을 선택하기 때문에 전투 코드를 복사할 필요가 없다.
 
 ### 레시피와 제작소의 관계
 

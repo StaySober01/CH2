@@ -3,7 +3,7 @@
 #include <iostream>
 
 Zombie::Zombie()
-    : Monster("Zombie", 60, 28, 15, "Rotten Tooth", 50) {}
+    : Monster("Zombie", 60, 28, 15, "Rotten Tooth", 50, 40) {}
 
 void Zombie::attack(Player* player) const {
     std::cout << "Zombie bites " << player->getName() << "!\n";
