@@ -3,5 +3,5 @@
 class Thief : public Player {
 public:
     Thief(const std::string& name, int hp, int mp, int power, int defence);
-    void attack() override;
+    void attack(Monster* monster) override;
 };

@@ -39,13 +39,9 @@ void battle(Player* player, Monster& monster) {
 
     while (player->getHP() > 0 && monster.getHP() > 0) {
         std::cout << "\n--- Player Turn ---\n";
-        player->attack();
-
-        int damage = calculateDamage(player->getPower(), monster.getDefence());
         int beforeHP = monster.getHP();
-        monster.setHP(beforeHP - damage);
-        std::cout << damage << " damage to " << monster.getName() << "!\n"
-                  << monster.getName() << " HP: " << beforeHP << " -> " << monster.getHP();
+        player->attack(&monster);
+        std::cout << monster.getName() << " HP: " << beforeHP << " -> " << monster.getHP();
         if (monster.getHP() <= 0) std::cout << " (Dead)";
         std::cout << '\n';
 
@@ -54,7 +50,7 @@ void battle(Player* player, Monster& monster) {
         std::cout << "\n--- Monster Turn ---\n";
         monster.attack(player);
 
-        damage = calculateDamage(monster.getPower(), player->getDefence());
+        int damage = calculateDamage(monster.getPower(), player->getDefence());
         beforeHP = player->getHP();
         player->setHP(beforeHP - damage);
         std::cout << damage << " damage to " << player->getName() << "!\n"
@@ -242,7 +238,6 @@ int main() {
     const std::array<const char*, 5> bonusStat = { "", "HP", "MP", "Attack", "Defense" };
     std::cout << "* You became a " << player->getJob() << "! ("
               << bonusStat.at(static_cast<std::size_t>(jobChoice)) << " +30)\n";
-    player->attack();
     player->printPlayerStatus();
 
     int HPPotion = 0;

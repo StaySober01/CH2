@@ -171,7 +171,7 @@ case 0:
 class Warrior : public Player {
 public:
     Warrior(const std::string& name, int hp, int mp, int power, int defence);
-    void attack() override;
+    void attack(Monster* monster) override;
 };
 ```
 
@@ -192,20 +192,21 @@ Warrior::Warrior(...)
 `Player`의 공격은 다음처럼 선언된다.
 
 ```cpp
-virtual void attack() = 0;
+class Monster;
+virtual void attack(Monster* monster) = 0;
 ```
 
-`= 0`이 붙은 순수 가상 함수는 부모가 공통 공격을 정하지 않고 각 직업이 반드시 자기 공격을 구현하게 한다. 이런 `Player`는 직접 객체로 만들 수 없는 **추상 클래스**가 된다.
+`class Monster;`는 뒤에서 정의될 클래스를 먼저 이름만 알려주는 전방 선언이다. `= 0`이 붙은 순수 가상 함수는 부모가 공통 공격을 정하지 않고 각 직업이 반드시 자기 공격을 구현하게 한다. 이런 `Player`는 직접 객체로 만들 수 없는 **추상 클래스**가 된다.
 
 `main.cpp`는 실제 직업과 관계없이 `Player*` 하나로 캐릭터를 다룬다.
 
 ```cpp
 Player* player = nullptr;
 player = new Warrior(name, hp, mp, power, defence);
-player->attack();
+player->attack(&monster);
 ```
 
-포인터의 자료형은 `Player*`지만 실제 객체가 `Warrior`라면 전사의 `attack()`이 실행된다. 같은 호출이 실제 객체에 따라 다르게 동작하는 것이 **다형성**이다.
+포인터의 자료형은 `Player*`지만 실제 객체가 `Warrior`라면 전사의 `attack(Monster*)`가 실행된다. 전사와 마법사는 한 번 공격하고, 궁수는 3회, 도적은 5회로 데미지를 나누어 적용한다. 각 타격의 계산 결과가 0 이하라면 최소 데미지 1을 적용한다. 같은 호출이 실제 객체에 따라 다르게 동작하는 것이 **다형성**이다.
 
 `new`로 만든 객체는 사용 후 `delete`해야 한다. 부모 포인터로 자식 객체를 안전하게 삭제하기 위해 `Player`에는 가상 소멸자 `virtual ~Player()`가 있다. 현재 코드는 이 수동 메모리 관리 방식을 연습하고 있으며, 현대 C++에서는 `std::unique_ptr`로 더 안전하게 표현할 수 있다.
 
@@ -224,7 +225,7 @@ int calculateDamage(int power, int defence) {
 }
 ```
 
-공격력에서 방어력을 빼되 결과가 0 이하라면 최소 1의 피해를 준다. `조건 ? 참일 때 값 : 거짓일 때 값`은 간단한 `if/else`를 값 하나로 표현하는 **삼항 연산자**다.
+이 공통 함수는 몬스터가 플레이어를 공격할 때 공격력에서 방어력을 빼고, 결과가 0 이하라면 최소 1의 피해를 주는 데 사용한다. 플레이어 공격은 각 직업의 `attack(Monster*)`가 직업별 계산식으로 처리한다. `조건 ? 참일 때 값 : 거짓일 때 값`은 간단한 `if/else`를 값 하나로 표현하는 **삼항 연산자**다.
 
 ### 참조와 포인터
 
@@ -326,7 +327,7 @@ Slime::Slime()
 
 전투에서 승리하면 몬스터의 `expReward`를 `Player::gainExp()`에 전달한다. 경험치가 `maxExp` 이상이면 레벨과 능력치를 올리고 경험치를 0으로 초기화한다. 다음 레벨에 필요한 경험치는 50씩 증가한다.
 
-각 자식 클래스는 `attack()`을 `override`하여 다른 공격 문장을 출력한다. `enterDungeon()`은 사용자가 고른 몬스터를 지역 객체로 만든 뒤 모두 같은 `battle(Player*, Monster&)` 함수에 전달한다. `Monster&`가 자식 객체도 받을 수 있고 가상 함수가 실제 몬스터의 공격을 선택하기 때문에 전투 코드를 복사할 필요가 없다.
+각 자식 클래스는 `attack(Monster*)`를 `override`하여 서로 다른 공격 횟수와 데미지 계산을 적용한다. `enterDungeon()`은 사용자가 고른 몬스터를 지역 객체로 만든 뒤 모두 같은 `battle(Player*, Monster&)` 함수에 전달한다. `Monster&`가 자식 객체도 받을 수 있고 가상 함수가 실제 몬스터의 공격을 선택하기 때문에 전투 코드를 복사할 필요가 없다.
 
 ### 레시피와 제작소의 관계
 

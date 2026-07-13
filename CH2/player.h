@@ -4,6 +4,8 @@
 #include <vector>
 #include "Item.h"
 
+class Monster;
+
 class Player {
 protected:
     std::string name;
@@ -54,5 +56,5 @@ public:
     void useMpPotion();
     bool addItem(const Item& item);
     const std::vector<Item>& getInventory() const;
-    virtual void attack() = 0;
+    virtual void attack(Monster* monster) = 0;
 };
