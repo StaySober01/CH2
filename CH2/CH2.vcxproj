@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClCompile Include="AlchemyWorkshop.cpp" />
     <ClCompile Include="Archer.cpp" />
+    <ClCompile Include="Dragon.cpp" />
     <ClCompile Include="Item.cpp" />
     <ClCompile Include="Magician.cpp" />
     <ClCompile Include="main.cpp" />
@@ -148,6 +149,7 @@
   <ItemGroup>
     <ClInclude Include="AlchemyWorkshop.h" />
     <ClInclude Include="Archer.h" />
+    <ClInclude Include="Dragon.h" />
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="Item.h" />
     <ClInclude Include="Magician.h" />

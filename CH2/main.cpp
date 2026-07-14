@@ -7,6 +7,7 @@
 #include <vector>
 #include "AlchemyWorkshop.h"
 #include "Archer.h"
+#include "Dragon.h"
 #include "Item.h"
 #include "Magician.h"
 #include "Monster.h"
@@ -127,7 +128,7 @@ bool useBattleItem(Player* player) {
     return player->removeItem(static_cast<std::size_t>(itemIndex));
 }
 
-void battle(Player* player, Monster& monster) {
+bool battle(Player* player, Monster& monster, bool isBoss = false) {
     std::cout << "\n[ Battle Start! ] " << player->getName() << '(' << player->getJob()
               << ") vs " << monster.getName() << "\n";
 
@@ -179,7 +180,7 @@ void battle(Player* player, Monster& monster) {
 
     if (monster.getHP() <= 0) {
         Item droppedItem{ monster.getDropItemName(), monster.getDropItemPrice() };
-        std::cout << "\n★ Victory!\n";
+        std::cout << (isBoss ? "\nVictory!\n" : "\n★ Victory!\n");
         player->gainExp(monster.getExpReward());
         std::cout << "  -> Got: " << droppedItem.name << "!\n";
 
@@ -189,10 +190,11 @@ void battle(Player* player, Monster& monster) {
         else {
             std::cout << "  -> Inventory is full.\n";
         }
+        return true;
     }
-    else {
-        std::cout << "\nDefeat... " << player->getName() << " has fallen.\n";
-    }
+
+    std::cout << "\nYou Died\n";
+    return false;
 }
 
 void printInventory(const Player& player) {
@@ -208,46 +210,69 @@ void printInventory(const Player& player) {
     inventory.PrintAllItems();
 }
 
-void enterDungeon(Player* player) {
+bool enterDungeon(Player* player, bool& slimeDefeated,
+                  bool& zombieDefeated, bool& skeletonDefeated) {
+    const bool dragonUnlocked = slimeDefeated && zombieDefeated && skeletonDefeated;
+
     clearScreen();
     std::cout << "=== Select Monster ===\n"
               << "1. Slime\n"
               << "2. Zombie\n"
-              << "3. Skeleton\n"
-              << "0. Back\n"
+              << "3. Skeleton\n";
+
+    if (dragonUnlocked) {
+        std::cout << "4. Dragon [BOSS]\n";
+    }
+    else {
+        std::cout << "4. Dragon [LOCKED - defeat all monsters]\n";
+    }
+
+    std::cout << "0. Back\n"
               << "\nChoose: ";
 
     int monsterChoice = -1;
     if (!(std::cin >> monsterChoice)) {
-        std::cout << "Invalid input. Enter a number from 0 to 3.\n";
+        std::cout << "Invalid input. Enter a number from 0 to 4.\n";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        return;
+        return true;
     }
 
     clearScreen();
     switch (monsterChoice) {
     case 1: {
         Slime slime;
-        battle(player, slime);
+        slimeDefeated = battle(player, slime);
         break;
     }
     case 2: {
         Zombie zombie;
-        battle(player, zombie);
+        zombieDefeated = battle(player, zombie);
         break;
     }
     case 3: {
         Skeleton skeleton;
-        battle(player, skeleton);
+        skeletonDefeated = battle(player, skeleton);
         break;
+    }
+    case 4: {
+        if (!dragonUnlocked) {
+            std::cout << "Dragon is still locked. Defeat Slime, Zombie, and Skeleton first.\n";
+            break;
+        }
+
+        Dragon dragon;
+        battle(player, dragon, true);
+        return false;
     }
     case 0:
-        return;
+        return true;
     default:
-        std::cout << "Invalid input. Enter a number from 0 to 3.\n";
+        std::cout << "Invalid input. Enter a number from 0 to 4.\n";
         break;
     }
+
+    return player->getHP() > 0;
 }
 
 void openPotionWorkshop(AlchemyWorkshop& workshop) {
@@ -421,6 +446,9 @@ int main() {
 
     AlchemyWorkshop workshop;
     bool isRunning = true;
+    bool slimeDefeated = false;
+    bool zombieDefeated = false;
+    bool skeletonDefeated = false;
 
     while (isRunning) {
         clearScreen();
@@ -447,7 +475,8 @@ int main() {
                 break;
             }
 
-            enterDungeon(player);
+            isRunning = enterDungeon(player, slimeDefeated,
+                                     zombieDefeated, skeletonDefeated);
             break;
         }
         case 2:
