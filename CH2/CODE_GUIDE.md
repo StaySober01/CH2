@@ -450,7 +450,9 @@ explicit Inventory(int capacity = 10)
 
 ### 아이템 추가와 삭제
 
-`AddItem()`은 `size_`가 `capacity_`보다 작을 때만 새 원소를 저장한다. 공간이 없다면 `false`를 반환하여 전투 보상 코드가 `Inventory is full.`을 출력할 수 있게 한다.
+`AddItem()`은 공간이 가득 차면 `Resize(capacity_ * 2)`를 호출한다. `Resize()`는 더 큰 배열을 할당하고 기존 아이템을 복사한 뒤 기존 배열을 해제하므로, 아이템을 잃지 않고 용량을 두 배로 늘릴 수 있다.
+
+`SortItems()`는 `std::sort`와 `compareByPrice()`를 사용해 현재 아이템을 가격이 낮은 순서로 정렬한다.
 
 `RemoveLastItem()`은 마지막 원소를 제거하고 `size_`를 하나 줄인다. 전투에서는 사용자가 중간 위치의 포션을 선택할 수도 있으므로 보조 함수 `RemoveItem(index)`도 구현했다. 이 함수는 인덱스 범위를 검사하고 뒤쪽 원소를 한 칸씩 앞으로 옮긴 다음 `RemoveLastItem()`을 호출한다.
 
@@ -491,7 +493,7 @@ Inventory(const Inventory& other)
 Inventory<Item> inventory;
 ```
 
-`Player::addItem()`과 `removeItem()`은 각각 `Inventory<Item>::AddItem()`과 `RemoveItem()`에 작업을 전달한다. 메인 메뉴의 인벤토리 출력은 `PrintAllItems()`, 현재 개수는 `GetSize()`, 최대 용량은 `GetCapacity()`를 사용한다. 인벤토리의 수명은 여전히 `Player` 객체와 같으므로 메뉴나 전투가 끝나도 아이템이 유지된다.
+`Player::addItem()`과 `removeItem()`은 각각 `Inventory<Item>::AddItem()`과 `RemoveItem()`에 작업을 전달한다. 메인 메뉴의 인벤토리 출력은 `PrintAllItems()`, 현재 개수는 `GetSize()`, 현재 용량은 `GetCapacity()`를 사용한다. 인벤토리는 가득 차면 자동 확장되며, 수명은 여전히 `Player` 객체와 같으므로 메뉴나 전투가 끝나도 아이템이 유지된다.
 
 ---
 

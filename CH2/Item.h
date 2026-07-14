@@ -8,3 +8,5 @@ struct Item {
 
     void PrintInfo() const;
 };
+
+bool compareByPrice(const Item& a, const Item& b);

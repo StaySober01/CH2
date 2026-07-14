@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
+#include "Item.h"
 
 template<typename T>
 class Inventory {
@@ -8,6 +10,17 @@ private:
     T* pItems_;
     int capacity_;
     int size_;
+
+    void Resize(int newCapacity) {
+        T* pNewItems = new T[newCapacity];
+        for (int index = 0; index < size_; ++index) {
+            pNewItems[index] = pItems_[index];
+        }
+
+        delete[] pItems_;
+        pItems_ = pNewItems;
+        capacity_ = newCapacity;
+    }
 
 public:
     explicit Inventory(int capacity = 10)
@@ -46,13 +59,27 @@ public:
     }
 
     bool AddItem(const T& item) {
+        bool wasExpanded = false;
         if (size_ >= capacity_) {
-            return false;
+            const int oldCapacity = capacity_;
+            std::cout << "Adding item... (" << size_ << '/' << capacity_ << " full)\n";
+            Resize(capacity_ * 2);
+            wasExpanded = true;
+            std::cout << "-> Inventory auto-expanded! (" << oldCapacity
+                      << " -> " << capacity_ << ")\n";
         }
 
         pItems_[size_] = item;
         ++size_;
+
+        if (wasExpanded) {
+            std::cout << "-> Item added\n";
+        }
         return true;
+    }
+
+    void SortItems() {
+        std::sort(pItems_, pItems_ + size_, compareByPrice);
     }
 
     bool RemoveLastItem() {
