@@ -250,7 +250,7 @@ void enterDungeon(Player* player) {
     }
 }
 
-void openPotionWorkshop(const AlchemyWorkshop& workshop) {
+void openPotionWorkshop(AlchemyWorkshop& workshop) {
     bool isWorkshopOpen = true;
 
     while (isWorkshopOpen) {
@@ -259,12 +259,15 @@ void openPotionWorkshop(const AlchemyWorkshop& workshop) {
                   << "1. Show all recipes\n"
                   << "2. Search by potion name\n"
                   << "3. Search by ingredient\n"
+                  << "4. Check potion stock\n"
+                  << "5. Dispense potion\n"
+                  << "6. Return potion\n"
                   << "0. Go back\n"
                   << "\nChoose: ";
 
         int choice = -1;
         if (!(std::cin >> choice)) {
-            std::cout << "Invalid input. Enter a number from 0 to 3.\n";
+            std::cout << "Invalid input. Enter a number from 0 to 6.\n";
             std::cin.clear();
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             pauseScreen();
@@ -286,11 +289,26 @@ void openPotionWorkshop(const AlchemyWorkshop& workshop) {
             std::getline(std::cin >> std::ws, searchText);
             workshop.SearchByIngredient(searchText);
             break;
+        case 4:
+            std::cout << "Potion name: ";
+            std::getline(std::cin >> std::ws, searchText);
+            std::cout << searchText << " stock: " << workshop.GetStock(searchText) << '\n';
+            break;
+        case 5:
+            std::cout << "Potion name: ";
+            std::getline(std::cin >> std::ws, searchText);
+            workshop.DispensePotion(searchText);
+            break;
+        case 6:
+            std::cout << "Potion name: ";
+            std::getline(std::cin >> std::ws, searchText);
+            workshop.ReturnPotion(searchText);
+            break;
         case 0:
             isWorkshopOpen = false;
             continue;
         default:
-            std::cout << "Invalid input. Enter a number from 0 to 3.\n";
+            std::cout << "Invalid input. Enter a number from 0 to 6.\n";
             break;
         }
 

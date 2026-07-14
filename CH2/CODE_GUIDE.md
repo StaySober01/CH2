@@ -357,6 +357,8 @@ bool PotionRecipe::ContainsIngredient(const std::string& ingredient) const {
 
 `DispensePotion()`은 재고가 남아 있을 때 하나를 차감하고, `ReturnPotion()`은 `MAX_STOCK`을 넘지 않는 범위에서 하나를 돌려받는다. `GetStock()`은 포션 이름에 해당하는 현재 재고를 반환한다.
 
+메인 메뉴에서 `Potion Workshop`을 선택하면 재고 확인, 포션 출고, 빈 병 반납 메뉴를 사용할 수 있다. 제작소 메뉴는 재고를 변경해야 하므로 `AlchemyWorkshop&`를 받아 같은 제작소 객체의 재고를 계속 유지한다. 기본 레시피 이름은 화면과 입력에서 `HP Potion`, `MP Potion`, `Stamina Potion`을 사용한다.
+
 ### `std::getline`과 `std::ws`
 
 ```cpp

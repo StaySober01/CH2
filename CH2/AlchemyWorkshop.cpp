@@ -2,9 +2,9 @@
 #include <iostream>
 
 AlchemyWorkshop::AlchemyWorkshop() {
-    AddRecipe({ "HPPotion", "Herb", 1, "Clear Water", 1 });
-    AddRecipe({ "MPPotion", "Magic Herb", 1, "Clear Water", 1 });
-    AddRecipe({ "StaminaPotion", "Herb", 1, "Berry", 1 });
+    AddRecipe({ "HP Potion", "Herb", 1, "Clear Water", 1 });
+    AddRecipe({ "MP Potion", "Magic Herb", 1, "Clear Water", 1 });
+    AddRecipe({ "Stamina Potion", "Herb", 1, "Berry", 1 });
 }
 
 void AlchemyWorkshop::AddRecipe(const PotionRecipe& recipe) {
