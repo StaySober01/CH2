@@ -329,15 +329,11 @@ Slime::Slime()
     : Monster("Slime", 30, 20, 10, "Slime Jelly", 30, 30) {}
 ```
 
-전투에서 승리하면 몬스터의 `expReward`를 `Player::gainExp()`에 전달한다. 경험치가 `maxExp` 이상이면 레벨과 능력치를 올리고 경험치를 0으로 초기화한다. 다음 레벨에 필요한 경험치는 50씩 증가한다.
-
-각 자식 클래스는 `attack(Monster*)`를 `override`하여 서로 다른 공격 횟수와 데미지 계산을 적용한다. `enterDungeon()`은 사용자가 고른 몬스터를 지역 객체로 만든 뒤 모두 같은 `battle(Player*, Monster&)` 함수에 전달한다. `Monster&`가 자식 객체도 받을 수 있고 가상 함수가 실제 몬스터의 공격을 선택하기 때문에 전투 코드를 복사할 필요가 없다.
-
-메인 게임 루프는 슬라임, 좀비, 스켈레톤의 처치 여부를 각각 저장한다. 세 값이 모두 `true`가 되면 던전 메뉴에서 HP 120, 공격력 42, 방어력 20인 `Dragon`이 개방된다. `battle()`은 승패를 반환하므로 일반 몬스터 처치 기록을 갱신할 수 있고, 플레이어가 사망하면 `You Died`, 드래곤을 처치하면 `Victory!`를 출력한 뒤 메인 게임 루프를 종료한다.
+각 몬스터 자식 클래스는 `attack(Player*)`를 `override`하여 서로 다른 공격 문장을 출력한다. `enterDungeon()`은 사용자가 고른 몬스터를 지역 객체로 만든 뒤 모두 같은 `battle(Player*, Monster&)` 함수에 전달한다. `Monster&`가 자식 객체도 받을 수 있고 가상 함수가 실제 몬스터의 공격을 선택하기 때문에 전투 코드를 복사할 필요가 없다.
 
 ### 레시피와 제작소의 관계
 
-`PotionRecipe`는 레시피 한 개를 나타내고 `AlchemyWorkshop`은 여러 레시피를 `std::vector<PotionRecipe>`로 소유한다. 레시피별 포션 재고는 `std::map<std::string, int>`에 저장하며, `AddRecipe()`가 새 레시피를 등록할 때 최대 재고인 3개로 초기화한다.
+`PotionRecipe`는 레시피 한 개를 나타내고 `AlchemyWorkshop`은 여러 레시피를 `std::vector<PotionRecipe>`로 소유한다.
 
 ```cpp
 class AlchemyWorkshop {
@@ -358,10 +354,6 @@ bool PotionRecipe::ContainsIngredient(const std::string& ingredient) const {
 
 “이 레시피가 재료를 포함하는가?”라는 판단을 `PotionRecipe` 안에 둔 덕분에 제작소는 재료 필드의 세부 구조를 덜 알아도 된다. 데이터와 그 데이터를 판단하는 기능을 가까이 두는 객체 지향 설계다.
 
-`DispensePotion()`은 재고가 남아 있을 때 하나를 차감하고, `ReturnPotion()`은 `MAX_STOCK`을 넘지 않는 범위에서 하나를 돌려받는다. `GetStock()`은 포션 이름에 해당하는 현재 재고를 반환한다.
-
-메인 메뉴에서 `Potion Workshop`을 선택하면 재고 확인, 포션 출고, 빈 병 반납 메뉴를 사용할 수 있다. 제작소 메뉴는 재고를 변경해야 하므로 `AlchemyWorkshop&`를 받아 같은 제작소 객체의 재고를 계속 유지한다. 기본 레시피 이름은 화면과 입력에서 `HP Potion`, `MP Potion`, `Stamina Potion`을 사용한다.
-
 ### `std::getline`과 `std::ws`
 
 ```cpp
@@ -379,12 +371,50 @@ std::getline(std::cin >> std::ws, searchText);
 5. 메인 메뉴에서 던전, 인벤토리, 포션 제작소 중 하나를 고른다.
 6. 던전에서는 매 턴 공격 또는 아이템 사용을 선택한다.
 7. 전투에서 승리하면 경험치와 드롭 아이템을 얻는다.
-8. 종료를 선택할 때까지 메인 메뉴를 반복한다.
-9. 마지막에 동적으로 생성한 플레이어를 `delete`한다.
+8. 세 일반 몬스터를 모두 처치하면 드래곤 보스가 개방된다.
+9. 플레이어가 사망하거나 드래곤을 처치하면 게임이 종료된다.
+10. 마지막에 동적으로 생성한 플레이어를 `delete`한다.
 
 ---
 
-## 8. 전투 중 포션 사용
+## 문서화 시작 (`d041ad3`)
+
+게임 기능을 추가한 커밋은 아니며, 지금 읽고 있는 `CODE_GUIDE.md`가 저장소에 처음 들어온 시점이다. 이후 도전 Step 커밋에서도 구현 변화에 맞춰 이 문서를 함께 갱신한다.
+
+---
+
+## 8. 도전 Step 1: `setPotion` 함수 (`d5b28a7`)
+
+HP 포션과 MP 포션의 초기 개수를 각각 대입하던 코드를 포인터 매개변수를 사용하는 함수로 분리했다.
+
+```cpp
+void setPotion(int count, int* p_HPPotion, int* p_MPPotion) {
+    *p_HPPotion = count;
+    *p_MPPotion = count;
+}
+```
+
+주소를 전달하면 함수가 호출한 쪽의 변수를 직접 변경할 수 있다. 현재 게임은 이 함수로 두 포션 개수를 5로 정한 뒤 플레이어 인벤토리에 지급한다.
+
+---
+
+## 9. 도전 Step 2: 레벨과 경험치 (`8c92cb0`)
+
+`Player`에 `level`, `exp`, `maxExp`가 추가되고, 몬스터에는 `expReward`가 추가됐다. 일반 몬스터를 처치하면 `gainExp()`가 보상 경험치를 더한다. 경험치가 기준 이상이면 레벨과 능력치를 올리고, 다음 레벨 요구 경험치를 50 증가시킨다.
+
+이 단계에서 경험치 보상은 슬라임 30, 좀비 40, 스켈레톤 50으로 구분된다. 상태 출력에도 현재 레벨과 경험치가 표시된다.
+
+---
+
+## 10. 도전 Step 3: 직업별 공격 오버라이딩 (`e97553d`)
+
+`Player::attack()`이 `Monster*`를 받는 순수 가상 함수가 되고, 네 직업이 각자의 공격 계산을 직접 구현한다. 전사와 마법사는 한 번 공격하고, 궁수는 3회, 도적은 5회로 피해를 나누어 적용한다.
+
+메인 전투 함수는 플레이어의 실제 직업을 구분하지 않고 `player->attack(&monster)`만 호출한다. 부모 포인터를 통한 같은 호출이 실제 자식 객체에 따라 다르게 실행되는 다형성을 전투 계산까지 확장한 단계다.
+
+---
+
+## 11. 도전 Step 4: 전투 중 포션 사용 (`cb4931b`)
 
 플레이어 턴마다 곧바로 공격하던 구조를 메뉴 선택 방식으로 바꿨다.
 
@@ -418,7 +448,7 @@ player->setMP(std::min(player->getMP() + 50, player->getMaxMP()));
 
 ---
 
-## 9. 도전 STEP 5: `Inventory<T>` 직접 구현
+## 12. 도전 Step 5: `Inventory<T>` 직접 구현 (`b5be991`)
 
 기존 `std::vector<Item>` 대신 [Inventory.h](Inventory.h)의 `Inventory<T>`가 아이템 저장 공간을 직접 관리한다. 템플릿을 사용했기 때문에 `Item` 이외의 자료형도 같은 컨테이너에 보관할 수 있다.
 
@@ -457,9 +487,7 @@ explicit Inventory(int capacity = 10)
 
 ### 아이템 추가와 삭제
 
-`AddItem()`은 공간이 가득 차면 `Resize(capacity_ * 2)`를 호출한다. `Resize()`는 더 큰 배열을 할당하고 기존 아이템을 복사한 뒤 기존 배열을 해제하므로, 아이템을 잃지 않고 용량을 두 배로 늘릴 수 있다.
-
-`SortItems()`는 `std::sort`와 `compareByPrice()`를 사용해 현재 아이템을 가격이 낮은 순서로 정렬한다.
+이 커밋 시점의 `AddItem()`은 공간이 가득 차면 `false`를 반환한다. 자동 확장과 정렬은 다음 Step 6에서 추가된다.
 
 `RemoveLastItem()`은 마지막 원소를 제거하고 `size_`를 하나 줄인다. 전투에서는 사용자가 중간 위치의 포션을 선택할 수도 있으므로 보조 함수 `RemoveItem(index)`도 구현했다. 이 함수는 인덱스 범위를 검사하고 뒤쪽 원소를 한 칸씩 앞으로 옮긴 다음 `RemoveLastItem()`을 호출한다.
 
@@ -500,7 +528,62 @@ Inventory(const Inventory& other)
 Inventory<Item> inventory;
 ```
 
-`Player::addItem()`과 `removeItem()`은 각각 `Inventory<Item>::AddItem()`과 `RemoveItem()`에 작업을 전달한다. 메인 메뉴의 인벤토리 출력은 `PrintAllItems()`, 현재 개수는 `GetSize()`, 현재 용량은 `GetCapacity()`를 사용한다. 인벤토리는 가득 차면 자동 확장되며, 수명은 여전히 `Player` 객체와 같으므로 메뉴나 전투가 끝나도 아이템이 유지된다.
+`Player::addItem()`과 `removeItem()`은 각각 `Inventory<Item>::AddItem()`과 `RemoveItem()`에 작업을 전달한다. 메인 메뉴의 인벤토리 출력은 `PrintAllItems()`, 현재 개수는 `GetSize()`, 현재 용량은 `GetCapacity()`를 사용한다. 이 커밋 시점에는 가득 찬 인벤토리에 더 추가할 수 없지만, 인벤토리의 수명은 `Player` 객체와 같으므로 메뉴나 전투가 끝나도 아이템이 유지된다.
+
+---
+
+## 13. 도전 Step 6: 인벤토리 자동 확장과 정렬 (`25491f1`)
+
+고정 용량처럼 동작하던 `Inventory<T>`에 `Resize()`가 추가됐다. 공간이 가득 찬 상태에서 아이템을 추가하면 기존 용량의 두 배로 확장한다.
+
+```cpp
+void Resize(int newCapacity) {
+    T* pNewItems = new T[newCapacity];
+    for (int index = 0; index < size_; ++index) {
+        pNewItems[index] = pItems_[index];
+    }
+
+    delete[] pItems_;
+    pItems_ = pNewItems;
+    capacity_ = newCapacity;
+}
+```
+
+순서는 **새 배열 할당 → 기존 데이터 복사 → 기존 배열 해제 → 포인터와 용량 갱신**이다. 기존 배열부터 해제하면 복사할 원본이 사라지므로 이 순서가 중요하다.
+
+`Item`의 `compareByPrice()`는 두 가격을 비교하고, `SortItems()`는 `std::sort(pItems_, pItems_ + size_, compareByPrice)`로 실제 아이템이 들어 있는 구간만 가격 오름차순으로 정렬한다.
+
+---
+
+## 14. 도전 Step 7: 포션 재고 관리 (`2196b9a`)
+
+`AlchemyWorkshop`에 레시피 이름별 재고를 저장하는 `std::map<std::string, int>`가 추가됐다. `AddRecipe()`로 레시피를 등록하면 `MAX_STOCK`인 3개로 자동 초기화된다.
+
+```cpp
+std::map<std::string, int> potionStock_;
+```
+
+`DispensePotion()`은 재고가 남아 있을 때 하나를 차감하고, 0이면 품절 메시지와 함께 실패한다. `ReturnPotion()`은 재고를 하나 늘리되 3개를 넘지 못하게 막는다. `GetStock()`은 포션 이름에 해당하는 현재 재고를 반환하며, 존재하지 않는 이름에는 0을 반환한다.
+
+---
+
+## 15. 도전 Step 7 후속: 제작소 메뉴 연결 (`7105a76`)
+
+앞 커밋에서 만든 재고 함수를 실제 콘솔 메뉴에 연결했다. `Potion Workshop`의 4번은 재고 확인, 5번은 포션 출고, 6번은 빈 병 반납이다.
+
+재고를 변경해야 하므로 `openPotionWorkshop()`은 읽기 전용 `const AlchemyWorkshop&` 대신 `AlchemyWorkshop&`를 받는다. 기본 레시피 이름도 화면과 입력에서 사용하는 `HP Potion`, `MP Potion`, `Stamina Potion`으로 통일했다.
+
+두 커밋의 제목은 모두 “도전 STEP 7”이지만, 첫 번째는 **자료구조와 재고 규칙**, 두 번째는 **사용자 메뉴 연결**을 담당한다.
+
+---
+
+## 16. 도전 Step 8: 던전과 드래곤 보스 (`403da26`)
+
+`Dragon`은 기존 `Monster`를 상속하므로 공통 전투 루프를 그대로 사용하고, 화염 공격 문장만 `attack(Player*)` 오버라이딩으로 다르게 표현한다. 능력치는 HP 120, 공격력 42, 방어력 20이며 드래곤 비늘과 경험치 150을 보상으로 가진다.
+
+메인 게임 루프는 슬라임, 좀비, 스켈레톤의 처치 여부를 각각 `bool`로 보관한다. 세 값이 모두 `true`일 때만 던전 메뉴의 드래곤이 `[BOSS]` 상태로 개방된다.
+
+`battle()`은 몬스터 처치 여부를 반환하고, `enterDungeon()`은 게임을 계속할지를 반환한다. 플레이어 HP가 0 이하가 되면 `You Died`, 드래곤을 처치하면 `Victory!`를 출력하며 반환값이 메인 루프까지 전달되어 게임이 종료된다.
 
 ---
 
@@ -510,9 +593,10 @@ Inventory<Item> inventory;
 2. `Inventory.h`에서 템플릿과 동적 배열의 생성·복사·해제를 확인한다.
 3. `player.h`와 `Player.cpp`에서 `Inventory<Item>`이 플레이어에게 연결되는 방식을 본다.
 4. 네 직업의 헤더와 소스를 비교해 달라지는 부분만 찾는다.
-5. `Monster.h`, `Monster.cpp`와 세 몬스터를 같은 방식으로 비교한다.
+5. `Monster.h`, `Monster.cpp`와 네 몬스터를 같은 방식으로 비교한다.
 6. `battle()`, `useBattleItem()`, `enterDungeon()`, `printInventory()`를 따라 데이터가 어떻게 전달되는지 본다.
 7. `PotionRecipe`와 `AlchemyWorkshop`을 읽으며 “레시피 한 개”와 “레시피 관리자”의 책임 차이를 본다.
+8. 마지막으로 `Dragon`과 세 처치 기록을 따라 보스 개방 및 게임 종료 조건을 확인한다.
 
 ## 입문자가 직접 해 볼 연습
 
@@ -532,7 +616,7 @@ Inventory<Item> inventory;
 - 플레이어에는 `takeDamage()`가 있지만 전투는 `setHP()`로 직접 HP를 계산한다. 피해 규칙을 한 함수로 모으면 변경하기 쉽다.
 - 숫자가 아닌 초기 HP, MP, Power, Defence 입력은 아직 스트림 복구 처리가 없다.
 - 레시피 검색은 대소문자와 앞뒤 공백이 정확히 같아야 성공한다.
-- `AlchemyWorkshop.cpp`의 검색 실패 문구 하나는 현재 문자 인코딩이 깨져 있으므로 올바른 문자열로 고칠 필요가 있다.
+- 제작소의 일부 실패 메시지는 한국어와 영어가 섞여 있으므로 한 언어로 통일할 수 있다.
 - `main.cpp`가 많은 흐름을 담당한다. 프로젝트가 더 커지면 게임 진행을 관리하는 `Game` 클래스로 나눌 수 있다.
 
 이 개선점들은 현재 코드가 나쁘다는 뜻이 아니다. 기능을 한 단계씩 완성한 뒤 중복과 책임을 다시 정리하는 **리팩터링 후보**이며, 다음 학습 주제로 삼기 좋은 지점들이다.
