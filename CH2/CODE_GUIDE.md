@@ -334,7 +334,7 @@ Slime::Slime()
 
 ### 레시피와 제작소의 관계
 
-`PotionRecipe`는 레시피 한 개를 나타내고 `AlchemyWorkshop`은 여러 레시피를 `std::vector<PotionRecipe>`로 소유한다.
+`PotionRecipe`는 레시피 한 개를 나타내고 `AlchemyWorkshop`은 여러 레시피를 `std::vector<PotionRecipe>`로 소유한다. 레시피별 포션 재고는 `std::map<std::string, int>`에 저장하며, `AddRecipe()`가 새 레시피를 등록할 때 최대 재고인 3개로 초기화한다.
 
 ```cpp
 class AlchemyWorkshop {
@@ -354,6 +354,8 @@ bool PotionRecipe::ContainsIngredient(const std::string& ingredient) const {
 ```
 
 “이 레시피가 재료를 포함하는가?”라는 판단을 `PotionRecipe` 안에 둔 덕분에 제작소는 재료 필드의 세부 구조를 덜 알아도 된다. 데이터와 그 데이터를 판단하는 기능을 가까이 두는 객체 지향 설계다.
+
+`DispensePotion()`은 재고가 남아 있을 때 하나를 차감하고, `ReturnPotion()`은 `MAX_STOCK`을 넘지 않는 범위에서 하나를 돌려받는다. `GetStock()`은 포션 이름에 해당하는 현재 재고를 반환한다.
 
 ### `std::getline`과 `std::ws`
 
